@@ -1,0 +1,419 @@
+{
+  "entities": {
+    "AlertSubscription": {
+      "title": "AlertSubscription",
+      "description": "Stores a farmer's saved Nakhon Ratchasima district and push-like alert trigger thresholds for SPI drought index and extreme weather events.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the farmer who owns this alert subscription.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "districtId": {
+          "type": "string",
+          "description": "Identifier of the Korat district being monitored.",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "districtNameTh": {
+          "type": "string",
+          "description": "Thai name of the Korat district.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "spiThreshold": {
+          "type": "number",
+          "description": "SPI-30d drought warning trigger threshold (e.g., -1.0, -1.5, -2.0)."
+        },
+        "rainProbThreshold": {
+          "type": "number",
+          "description": "Minimum rain probability percentage to trigger heavy rain/storm alerts (0-100)."
+        },
+        "maxTempThresholdC": {
+          "type": "number",
+          "description": "Maximum temperature threshold in Celsius to trigger crop heat stress alerts (25-48)."
+        },
+        "enableExtremeWeather": {
+          "type": "boolean",
+          "description": "Whether extreme weather advisories (summer storms, flash floods, heatwaves) trigger push alerts."
+        },
+        "enableSpiAlert": {
+          "type": "boolean",
+          "description": "Whether SPI drought threshold breaches trigger push alerts."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether this district alert trigger is currently active."
+        },
+        "cropFocus": {
+          "type": "string",
+          "description": "Primary crop monitored in this district plot.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the subscription was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the subscription was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "districtId",
+        "districtNameTh",
+        "spiThreshold",
+        "rainProbThreshold",
+        "maxTempThresholdC",
+        "enableExtremeWeather",
+        "enableSpiAlert",
+        "isActive",
+        "cropFocus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AlertLog": {
+      "title": "AlertLog",
+      "description": "Stores push-like notification events triggered for a farmer's saved districts.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the farmer receiving the alert.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "districtId": {
+          "type": "string",
+          "description": "Korat district ID that triggered the alert.",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "districtNameTh": {
+          "type": "string",
+          "description": "Thai name of the Korat district.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "alertType": {
+          "type": "string",
+          "description": "Category of alert: spi_drought, extreme_weather, heavy_rain, or heat_stress.",
+          "enum": ["spi_drought", "extreme_weather", "heavy_rain", "heat_stress"],
+          "minLength": 3,
+          "maxLength": 40
+        },
+        "severity": {
+          "type": "string",
+          "description": "Severity level: critical, warning, or advisory.",
+          "enum": ["critical", "warning", "advisory"],
+          "minLength": 3,
+          "maxLength": 24
+        },
+        "title": {
+          "type": "string",
+          "description": "Headline of the push alert.",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "message": {
+          "type": "string",
+          "description": "Detailed actionable message for the farmer.",
+          "minLength": 2,
+          "maxLength": 600
+        },
+        "metricSummary": {
+          "type": "string",
+          "description": "Snapshot of the triggering metric (e.g., SPI-30d -1.72 / Rain 75%).",
+          "minLength": 2,
+          "maxLength": 140
+        },
+        "isRead": {
+          "type": "boolean",
+          "description": "Whether the farmer has acknowledged/read the notification."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the alert was generated."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the alert status was last updated."
+        }
+      },
+      "required": [
+        "ownerId",
+        "districtId",
+        "districtNameTh",
+        "alertType",
+        "severity",
+        "title",
+        "message",
+        "metricSummary",
+        "isRead",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ForumPost": {
+      "title": "ForumPost",
+      "description": "Public community forum post discussing agriculture, crop techniques, disease advisories, and regional questions in Nakhon Ratchasima.",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the farmer who wrote this post.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Display name or farm identity of the author.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "authorRole": {
+          "type": "string",
+          "description": "Community role: farmer, smart_farmer, coop_leader, agri_officer, or moderator.",
+          "enum": ["farmer", "smart_farmer", "coop_leader", "agri_officer", "moderator"]
+        },
+        "districtId": {
+          "type": "string",
+          "description": "Associated Korat district ID or 'all'.",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "districtNameTh": {
+          "type": "string",
+          "description": "Thai name of the district (e.g., อ.ด่านขุนทด, อ.พิมาย, ทุกอำเภอในโคราช).",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "description": "Topic category code.",
+          "enum": ["rice", "cassava", "sugarcane", "corn", "fruit", "water_irrigation", "fertilizer_soil", "partnership_credit", "machinery", "general"]
+        },
+        "categoryNameTh": {
+          "type": "string",
+          "description": "Thai title of the category.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "postType": {
+          "type": "string",
+          "description": "Type of forum post.",
+          "enum": ["question", "advice", "discussion", "official_notice"]
+        },
+        "cropTag": {
+          "type": "string",
+          "description": "Specific agricultural crop or theme tag.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "title": {
+          "type": "string",
+          "description": "Headline of the forum topic.",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "content": {
+          "type": "string",
+          "description": "Detailed text content of the discussion.",
+          "minLength": 5,
+          "maxLength": 3000
+        },
+        "likesCount": {
+          "type": "number",
+          "description": "Number of upvotes / helpful reactions."
+        },
+        "replyCount": {
+          "type": "number",
+          "description": "Total number of replies under this topic."
+        },
+        "isPinned": {
+          "type": "boolean",
+          "description": "Whether the moderator has pinned this topic to top."
+        },
+        "isLocked": {
+          "type": "boolean",
+          "description": "Whether the topic is locked for further replies."
+        },
+        "isResolved": {
+          "type": "boolean",
+          "description": "Whether the question has been resolved with a satisfactory answer."
+        },
+        "moderationStatus": {
+          "type": "string",
+          "description": "Moderation status: active, flagged, or hidden.",
+          "enum": ["active", "flagged", "hidden"]
+        },
+        "reportCount": {
+          "type": "number",
+          "description": "Count of member reports against this topic."
+        },
+        "moderatorNote": {
+          "type": "string",
+          "description": "Official note or advisory remark appended by community moderators.",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the post was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the post was last modified."
+        }
+      },
+      "required": [
+        "authorId",
+        "authorName",
+        "authorRole",
+        "districtId",
+        "districtNameTh",
+        "category",
+        "categoryNameTh",
+        "postType",
+        "cropTag",
+        "title",
+        "content",
+        "likesCount",
+        "replyCount",
+        "isPinned",
+        "isLocked",
+        "isResolved",
+        "moderationStatus",
+        "reportCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ForumReply": {
+      "title": "ForumReply",
+      "description": "Reply or answer under a forum post sharing farmer insights or expert advisory.",
+      "type": "object",
+      "properties": {
+        "postId": {
+          "type": "string",
+          "description": "Parent forum post ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the commenter.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Display name of the replier.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "authorRole": {
+          "type": "string",
+          "description": "Role of the replier.",
+          "enum": ["farmer", "smart_farmer", "coop_leader", "agri_officer", "moderator"]
+        },
+        "districtNameTh": {
+          "type": "string",
+          "description": "District or zone of the replier.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "content": {
+          "type": "string",
+          "description": "Comment or advice content.",
+          "minLength": 2,
+          "maxLength": 2000
+        },
+        "likesCount": {
+          "type": "number",
+          "description": "Upvotes received for this reply."
+        },
+        "isExpertAnswer": {
+          "type": "boolean",
+          "description": "Whether verified as best solution/answer."
+        },
+        "isFlagged": {
+          "type": "boolean",
+          "description": "Whether reported by members."
+        },
+        "isHidden": {
+          "type": "boolean",
+          "description": "Whether hidden by moderator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when reply was posted."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when reply was modified."
+        }
+      },
+      "required": [
+        "postId",
+        "authorId",
+        "authorName",
+        "authorRole",
+        "districtNameTh",
+        "content",
+        "likesCount",
+        "isExpertAnswer",
+        "isFlagged",
+        "isHidden",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/alertSubscriptions/{subscriptionId}": {
+      "schema": {
+        "$ref": "#/entities/AlertSubscription"
+      },
+      "description": "Collection of district SPI and extreme weather alert triggers configured by authenticated farmers."
+    },
+    "/alertLogs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/AlertLog"
+      },
+      "description": "Collection of dispatched push alert notifications for authenticated farmers."
+    },
+    "/forumPosts/{postId}": {
+      "schema": {
+        "$ref": "#/entities/ForumPost"
+      },
+      "description": "Public community forum posts created by Nakhon Ratchasima farmers, cooperatives, and agricultural officers."
+    },
+    "/forumPosts/{postId}/replies/{replyId}": {
+      "schema": {
+        "$ref": "#/entities/ForumReply"
+      },
+      "description": "Discussion replies, agricultural advice, and comments under a forum post."
+    }
+  }
+}

@@ -1,0 +1,236 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Pillar 2: Validation Blueprint for AlertSubscription
+    function isValidAlertSubscription(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'districtId',
+        'districtNameTh',
+        'spiThreshold',
+        'rainProbThreshold',
+        'maxTempThresholdC',
+        'enableExtremeWeather',
+        'enableSpiAlert',
+        'isActive',
+        'cropFocus',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'districtId',
+        'districtNameTh',
+        'spiThreshold',
+        'rainProbThreshold',
+        'maxTempThresholdC',
+        'enableExtremeWeather',
+        'enableSpiAlert',
+        'isActive',
+        'cropFocus',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string &&
+      data.ownerId.size() >= 1 &&
+      data.ownerId.size() <= 128 &&
+      data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.districtId is string &&
+      data.districtId.size() >= 2 &&
+      data.districtId.size() <= 64 &&
+      data.districtId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.districtNameTh is string &&
+      data.districtNameTh.size() >= 2 &&
+      data.districtNameTh.size() <= 120 &&
+      data.spiThreshold is number &&
+      data.spiThreshold >= -4.0 &&
+      data.spiThreshold <= 4.0 &&
+      data.rainProbThreshold is number &&
+      data.rainProbThreshold >= 0 &&
+      data.rainProbThreshold <= 100 &&
+      data.maxTempThresholdC is number &&
+      data.maxTempThresholdC >= 20 &&
+      data.maxTempThresholdC <= 50 &&
+      data.enableExtremeWeather is bool &&
+      data.enableSpiAlert is bool &&
+      data.isActive is bool &&
+      data.cropFocus is string &&
+      data.cropFocus.size() >= 1 &&
+      data.cropFocus.size() <= 120 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Pillar 2: Validation Blueprint for AlertLog
+    function isValidAlertLog(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'districtId',
+        'districtNameTh',
+        'alertType',
+        'severity',
+        'title',
+        'message',
+        'metricSummary',
+        'isRead',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'districtId',
+        'districtNameTh',
+        'alertType',
+        'severity',
+        'title',
+        'message',
+        'metricSummary',
+        'isRead',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string &&
+      data.ownerId.size() >= 1 &&
+      data.ownerId.size() <= 128 &&
+      data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.districtId is string &&
+      data.districtId.size() >= 2 &&
+      data.districtId.size() <= 64 &&
+      data.districtId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.districtNameTh is string &&
+      data.districtNameTh.size() >= 2 &&
+      data.districtNameTh.size() <= 120 &&
+      data.alertType is string &&
+      data.alertType.size() >= 3 &&
+      data.alertType.size() <= 40 &&
+      (data.alertType == 'spi_drought' ||
+       data.alertType == 'extreme_weather' ||
+       data.alertType == 'heavy_rain' ||
+       data.alertType == 'heat_stress') &&
+      data.severity is string &&
+      data.severity.size() >= 3 &&
+      data.severity.size() <= 24 &&
+      (data.severity == 'critical' ||
+       data.severity == 'warning' ||
+       data.severity == 'advisory') &&
+      data.title is string &&
+      data.title.size() >= 2 &&
+      data.title.size() <= 200 &&
+      data.message is string &&
+      data.message.size() >= 2 &&
+      data.message.size() <= 600 &&
+      data.metricSummary is string &&
+      data.metricSummary.size() >= 2 &&
+      data.metricSummary.size() <= 140 &&
+      data.isRead is bool &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Collection 1: Farmer District Alert Subscriptions
+    match /alertSubscriptions/{subscriptionId} {
+      allow get: if isVerifiedUser() &&
+        isValidId(subscriptionId) &&
+        existing().ownerId == request.auth.uid;
+
+      allow list: if isVerifiedUser() &&
+        resource.data.ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(subscriptionId) &&
+        isValidAlertSubscription(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(subscriptionId) &&
+        isValidAlertSubscription(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().districtId == existing().districtId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action 1: Toggle Active Status
+          incoming().diff(existing()).affectedKeys().hasOnly(['isActive', 'updatedAt']) ||
+          // Action 2: Update Threshold Configuration
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'spiThreshold',
+            'rainProbThreshold',
+            'maxTempThresholdC',
+            'enableExtremeWeather',
+            'enableSpiAlert',
+            'cropFocus',
+            'isActive',
+            'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerifiedUser() &&
+        isValidId(subscriptionId) &&
+        existing().ownerId == request.auth.uid;
+    }
+
+    // Collection 2: Dispatched Push Alert Logs
+    match /alertLogs/{logId} {
+      allow get: if isVerifiedUser() &&
+        isValidId(logId) &&
+        existing().ownerId == request.auth.uid;
+
+      allow list: if isVerifiedUser() &&
+        resource.data.ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(logId) &&
+        isValidAlertLog(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(logId) &&
+        isValidAlertLog(incoming()) &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().districtId == existing().districtId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action 1: Mark Notification as Read/Unread
+          incoming().diff(existing()).affectedKeys().hasOnly(['isRead', 'updatedAt'])
+        );
+
+      allow delete: if isVerifiedUser() &&
+        isValidId(logId) &&
+        existing().ownerId == request.auth.uid;
+    }
+  }
+}
